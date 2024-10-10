@@ -1,6 +1,8 @@
 package com.brokerage.models.request;
 
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -9,5 +11,5 @@ public class CreateOrderRequest {
     private String assetName;
     private String orderSide;
     private int size;
-    private double price;
+    private BigDecimal price;
 }
