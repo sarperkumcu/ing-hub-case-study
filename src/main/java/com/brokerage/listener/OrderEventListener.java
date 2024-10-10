@@ -1,6 +1,7 @@
 package com.brokerage.listener;
 
 import com.brokerage.event.*;
+import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.models.entity.Order;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.repository.OrderRepository;
@@ -9,6 +10,7 @@ import com.brokerage.service.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,11 @@ public class OrderEventListener {
         this.orderService = orderService;
     }
 
+    @RetryableTopic(
+            attempts = "3",
+            exclude = {InsufficientBalanceException.class, IllegalArgumentException.class},
+            autoCreateTopics = "false"
+    )
     @KafkaListener(topics = "create-order-topic", groupId = "brokerage-group")
     @Transactional
     public void handleCreateOrder(String event) {

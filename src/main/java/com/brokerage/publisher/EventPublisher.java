@@ -1,7 +1,7 @@
-package com.brokerage.producer;
+package com.brokerage.publisher;
 
 import com.brokerage.event.*;
-import com.brokerage.models.entity.Order;
+import com.brokerage.models.request.CancelOrderRequest;
 import com.brokerage.models.request.CreateOrderRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +34,20 @@ public class EventPublisher {
         }
         kafkaTemplate.send("create-order-topic", message);
         return eventId;
+    }
+
+    public UUID publishCancelOrderEvent(CancelOrderRequest cancelOrderRequest){
+        UUID eventId = UUID.randomUUID();
+        CancelOrderEvent event = new CancelOrderEvent(eventId, cancelOrderRequest.getOrderId(), cancelOrderRequest.getCustomerId());
+        String message = null;
+        try {
+            message = objectMapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        kafkaTemplate.send("cancel-order-topic", message);
+        return eventId;
+
     }
 
 }

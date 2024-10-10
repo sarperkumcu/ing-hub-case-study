@@ -33,13 +33,13 @@ public class Order {
     private String orderSide; // Should be "BUY" or "SELL"
 
     @Column(name = "size", nullable = false)
-    private int size;
+    private BigDecimal size;
 
     @Column(name = "price", nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
 
     @Column(name = "status", nullable = false)
-    private String status; // Should be "PENDING", "MATCHED", or "CANCELED"
+    private String status;
 
     @Column(name = "create_date", nullable = false)
     private LocalDateTime createDate = LocalDateTime.now();

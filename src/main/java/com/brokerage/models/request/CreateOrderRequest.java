@@ -10,6 +10,6 @@ public class CreateOrderRequest {
     private UUID customerId;
     private String assetName;
     private String orderSide;
-    private int size;
+    private BigDecimal size;
     private BigDecimal price;
 }
