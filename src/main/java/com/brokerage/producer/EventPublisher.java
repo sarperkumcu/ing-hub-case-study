@@ -23,8 +23,8 @@ public class EventPublisher {
     }
 
     public UUID publishCreateOrderEvent(CreateOrderRequest createOrderRequest) {
-        UUID orderId = UUID.randomUUID();
-        CreateOrderEvent event = new CreateOrderEvent(orderId, createOrderRequest.getCustomerId(), createOrderRequest.getAssetName(),
+        UUID eventId = UUID.randomUUID();
+        CreateOrderEvent event = new CreateOrderEvent(eventId, createOrderRequest.getCustomerId(), createOrderRequest.getAssetName(),
                 createOrderRequest.getOrderSide(), createOrderRequest.getSize(), createOrderRequest.getPrice());
         String message = null;
         try {
@@ -33,7 +33,7 @@ public class EventPublisher {
             throw new RuntimeException(e);
         }
         kafkaTemplate.send("create-order-topic", message);
-        return orderId;
+        return eventId;
     }
 
 }

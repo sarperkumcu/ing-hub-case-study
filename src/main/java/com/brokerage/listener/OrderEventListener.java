@@ -30,6 +30,7 @@ public class OrderEventListener {
     @KafkaListener(topics = "create-order-topic", groupId = "brokerage-group")
     @Transactional
     public void handleCreateOrder(String event) {
+        // @todo idempotency -> redis
         try {
             Order order = objectMapper.readValue(event, Order.class);
             orderService.createOrder(order.getCustomerId(), order.getAssetName(), order.getOrderSide(), order.getSize(), order.getPrice());
