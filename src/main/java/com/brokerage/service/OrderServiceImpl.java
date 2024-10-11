@@ -5,6 +5,9 @@ import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.Order;
 
+import com.brokerage.models.request.CancelOrderRequest;
+import com.brokerage.models.request.CreateOrderRequest;
+import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,22 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final AssetRepository assetRepository;
+    private final OrderEventPublisher eventProducer;
 
-    public OrderServiceImpl(OrderRepository orderRepository, AssetRepository assetRepository) {
+
+    public OrderServiceImpl(OrderRepository orderRepository, AssetRepository assetRepository, OrderEventPublisher eventProducer) {
         this.orderRepository = orderRepository;
         this.assetRepository = assetRepository;
+        this.eventProducer = eventProducer;
+    }
+
+
+    public UUID publishCreateOrderEvent(CreateOrderRequest createOrderRequest) {
+        return eventProducer.publishCreateOrderEvent(createOrderRequest);
+    }
+
+    public UUID publishCancelOrderEvent(CancelOrderRequest cancelOrderRequest) {
+        return eventProducer.publishCancelOrderEvent(cancelOrderRequest);
     }
 
     @Transactional
@@ -51,7 +66,6 @@ public class OrderServiceImpl implements OrderService {
     private void checkAndDeductBalanceForBuy(UUID customerId, BigDecimal size, BigDecimal price) {
         BigDecimal totalAmount = size.multiply(price);
 
-        // Lock and check the TRY asset balance
         Asset tryAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY")
                 .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + customerId));
 
@@ -59,13 +73,11 @@ public class OrderServiceImpl implements OrderService {
             throw new InsufficientBalanceException("Insufficient TRY balance. Required: " + totalAmount + ", Available: " + tryAsset.getUsableSize());
         }
 
-        // Deduct the required TRY balance
         tryAsset.setUsableSize(tryAsset.getUsableSize().subtract(totalAmount));
         assetRepository.save(tryAsset);
     }
 
     private void checkAndDeductBalanceForSell(UUID customerId, String assetName, BigDecimal size) {
-        // Lock and check the specified asset balance
         Asset assetToSell = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, assetName)
                 .orElseThrow(() -> new ResourceNotFoundException(assetName + " asset not found for customer with ID: " + customerId));
 
@@ -73,7 +85,6 @@ public class OrderServiceImpl implements OrderService {
             throw new InsufficientBalanceException("Insufficient " + assetName + " balance. Required: " + size + ", Available: " + assetToSell.getUsableSize());
         }
 
-        // Deduct the required asset balance
         assetToSell.setUsableSize(assetToSell.getUsableSize().subtract(size));
         assetRepository.save(assetToSell);
     }

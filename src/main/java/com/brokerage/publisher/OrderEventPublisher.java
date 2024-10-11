@@ -13,12 +13,12 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class EventPublisher {
+public class OrderEventPublisher {
     private final ObjectMapper objectMapper;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public EventPublisher(ObjectMapper objectMapper, KafkaTemplate<String, Object> kafkaTemplate) {
+    public OrderEventPublisher(ObjectMapper objectMapper, KafkaTemplate<String, Object> kafkaTemplate) {
         this.objectMapper = objectMapper;
         this.kafkaTemplate = kafkaTemplate;
     }
