@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface OrderService {
     Order createOrder(UUID customerId, String assetName, String orderSide, BigDecimal size, BigDecimal price);
+    Order cancelOrder(UUID orderId, UUID customerId);
     }

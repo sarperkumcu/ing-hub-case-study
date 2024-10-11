@@ -24,6 +24,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
+    @Override
     public Order createOrder(UUID customerId, String assetName, String orderSide, BigDecimal size, BigDecimal price) {
 
         // @todo handle if assetName equals TRY
@@ -44,6 +45,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus("PENDING");
         return orderRepository.save(order);
     }
+
+
 
     private void checkAndDeductBalanceForBuy(UUID customerId, BigDecimal size, BigDecimal price) {
         BigDecimal totalAmount = size.multiply(price);
@@ -75,4 +78,49 @@ public class OrderServiceImpl implements OrderService {
         assetRepository.save(assetToSell);
     }
 
+    @Transactional
+    @Override
+    public Order cancelOrder(UUID orderId, UUID customerId) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+
+        if (!order.getCustomerId().equals(customerId)) {
+            throw new IllegalArgumentException("Order does not belong to the specified customer.");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(order.getStatus())) {
+            throw new IllegalStateException("Only PENDING orders can be canceled.");
+        }
+
+        if ("BUY".equalsIgnoreCase(order.getOrderSide())) {
+            refundTryBalance(order);
+        } else if ("SELL".equalsIgnoreCase(order.getOrderSide())) {
+            refundAssetBalance(order);
+        }
+
+        order.setStatus("CANCELED");
+        orderRepository.save(order);
+        return order;
+    }
+    private void refundTryBalance(Order order) {
+        BigDecimal refundAmount = order.getSize().multiply(order.getPrice());
+
+        Asset tryAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(order.getCustomerId(), "TRY")
+                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + order.getCustomerId()));
+
+        tryAsset.setUsableSize(tryAsset.getUsableSize().add(refundAmount));
+        assetRepository.save(tryAsset);
+
+        System.out.println("Refunded " + refundAmount + " TRY to customer " + order.getCustomerId());
+    }
+
+    private void refundAssetBalance(Order order) {
+        Asset soldAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(order.getCustomerId(), order.getAssetName())
+                .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for customer with ID: " + order.getCustomerId()));
+
+        soldAsset.setUsableSize(soldAsset.getUsableSize().add(order.getSize()));
+        assetRepository.save(soldAsset);
+
+        System.out.println("Refunded " + order.getSize() + " of " + order.getAssetName() + " to customer " + order.getCustomerId());
+    }
 }
