@@ -33,7 +33,7 @@ public class OrderEventListener {
         // @todo idempotency -> redis
         try {
             Order order = objectMapper.readValue(event, Order.class);
-            orderService.createOrder(order.getCustomerId(), order.getAssetName(), order.getOrderSide(), order.getSize(), order.getPrice());
+            orderService.createOrder(order.getUser().getId(), order.getAssetName(), order.getOrderSide(), order.getSize(), order.getPrice());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

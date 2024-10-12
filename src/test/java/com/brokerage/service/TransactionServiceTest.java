@@ -44,7 +44,7 @@ public class TransactionServiceTest {
     void deposit_WithExistingTRYAsset_ShouldUpdateBalance() {
         // Mock the existing TRY asset for the customer
         Asset tryAsset = new Asset();
-        tryAsset.setCustomerId(customerId);
+       // tryAsset.setCustomerId(customerId);
         tryAsset.setAssetName("TRY");
         tryAsset.setSize(BigDecimal.valueOf(1000));
         tryAsset.setUsableSize(BigDecimal.valueOf(800));

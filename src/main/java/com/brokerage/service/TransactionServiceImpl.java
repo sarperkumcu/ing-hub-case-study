@@ -44,7 +44,7 @@ public class TransactionServiceImpl implements TransactionService{
             throw new IllegalArgumentException("Deposit amount must be greater than zero.");
         }
 
-        Optional<Asset> tryAssetOptional = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY");
+        Optional<Asset> tryAssetOptional = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY");
 
         Asset tryAsset;
 
@@ -54,7 +54,7 @@ public class TransactionServiceImpl implements TransactionService{
             tryAsset.setUsableSize(tryAsset.getUsableSize().add(amount));
         } else {
             tryAsset = new Asset();
-            tryAsset.setCustomerId(customerId);
+           // tryAsset.getId(customerId);
             tryAsset.setAssetName("TRY");
             tryAsset.setSize(amount);
             tryAsset.setUsableSize(amount);
@@ -70,7 +70,7 @@ public class TransactionServiceImpl implements TransactionService{
             throw new IllegalArgumentException("Withdraw amount must be greater than zero.");
         }
 
-        Asset tryAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY")
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY")
                 .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + customerId));
 
         if (tryAsset.getUsableSize().compareTo(amount) < 0) {

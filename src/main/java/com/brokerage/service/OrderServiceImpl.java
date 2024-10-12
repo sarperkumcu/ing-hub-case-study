@@ -77,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
-        order.setCustomerId(customerId);
+        //order.setUser(customerId);
         order.setAssetName(assetName);
         order.setOrderSide(orderSide);
         order.setSize(size);
@@ -89,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
     private void checkAndDeductBalanceForBuy(UUID customerId, BigDecimal size, BigDecimal price) {
         BigDecimal totalAmount = size.multiply(price);
 
-        Asset tryAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY")
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY")
                 .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + customerId));
 
         if (tryAsset.getUsableSize().compareTo(totalAmount) < 0) {
@@ -101,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void checkAndDeductBalanceForSell(UUID customerId, String assetName, BigDecimal size) {
-        Asset assetToSell = assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, assetName)
+        Asset assetToSell = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, assetName)
                 .orElseThrow(() -> new ResourceNotFoundException(assetName + " asset not found for customer with ID: " + customerId));
 
         if (assetToSell.getUsableSize().compareTo(size) < 0) {
@@ -118,7 +118,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
-        if (!order.getCustomerId().equals(customerId)) {
+        if (!order.getUser().getId().equals(customerId)) {
             throw new IllegalArgumentException("Order does not belong to the specified customer.");
         }
 
@@ -139,22 +139,22 @@ public class OrderServiceImpl implements OrderService {
     private void refundTryBalance(Order order) {
         BigDecimal refundAmount = order.getSize().multiply(order.getPrice());
 
-        Asset tryAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(order.getCustomerId(), "TRY")
-                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + order.getCustomerId()));
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(order.getUser().getId(), "TRY")
+                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + order.getUser().getId()));
 
         tryAsset.setUsableSize(tryAsset.getUsableSize().add(refundAmount));
         assetRepository.save(tryAsset);
 
-        System.out.println("Refunded " + refundAmount + " TRY to customer " + order.getCustomerId());
+        System.out.println("Refunded " + refundAmount + " TRY to customer " + order.getUser().getId());
     }
 
     private void refundAssetBalance(Order order) {
-        Asset soldAsset = assetRepository.findByCustomerIdAndAssetNameForUpdate(order.getCustomerId(), order.getAssetName())
-                .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for customer with ID: " + order.getCustomerId()));
+        Asset soldAsset = assetRepository.findByUserIdAndAssetNameForUpdate(order.getUser().getId(), order.getAssetName())
+                .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for customer with ID: " + order.getUser().getId()));
 
         soldAsset.setUsableSize(soldAsset.getUsableSize().add(order.getSize()));
         assetRepository.save(soldAsset);
 
-        System.out.println("Refunded " + order.getSize() + " of " + order.getAssetName() + " to customer " + order.getCustomerId());
+        System.out.println("Refunded " + order.getSize() + " of " + order.getAssetName() + " to customer " + order.getUser().getId());
     }
 }

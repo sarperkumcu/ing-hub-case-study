@@ -13,10 +13,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AssetRepository extends JpaRepository<Asset, UUID>, JpaSpecificationExecutor<Asset> {
-    List<Asset> findByCustomerId(UUID customerId);
+    List<Asset> findByUserId(UUID userId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT a FROM Asset a WHERE a.customerId = :customerId AND a.assetName = :assetName")
-    Optional<Asset> findByCustomerIdAndAssetNameForUpdate(@Param("customerId") UUID customerId, @Param("assetName") String assetName);
-
-    Optional<Asset> findByCustomerIdAndAssetName(UUID customerId, String assetName);
+    @Query("SELECT a FROM Asset a WHERE a.user.id = :userId AND a.assetName = :assetName")
+    Optional<Asset> findByUserIdAndAssetNameForUpdate(@Param("userId") UUID userId, @Param("assetName") String assetName);
+    Optional<Asset> findByUserIdAndAssetName(UUID customerId, String assetName);
 }

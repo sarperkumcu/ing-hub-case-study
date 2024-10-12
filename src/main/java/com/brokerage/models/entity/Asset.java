@@ -12,7 +12,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "asset")
+@Table(name = "assets")
 public class Asset {
 
     @Id
@@ -20,8 +20,9 @@ public class Asset {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "customer_id", nullable = false)
-    private UUID customerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User user;
 
     @Column(name = "asset_name", nullable = false)
     private String assetName;

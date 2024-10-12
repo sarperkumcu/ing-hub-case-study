@@ -19,18 +19,18 @@ public class Order {
 
     @Id
     @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "order_id", updatable = false, nullable = false)
-    private UUID orderId;
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(name = "customer_id", nullable = false)
-    private UUID customerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User user;
 
     @Column(name = "asset_name", nullable = false)
     private String assetName;
 
     @Column(name = "order_side", nullable = false)
-    private String orderSide; // Should be "BUY" or "SELL"
+    private String orderSide;
 
     @Column(name = "size", nullable = false)
     private BigDecimal size;
