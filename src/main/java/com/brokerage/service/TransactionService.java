@@ -9,9 +9,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface TransactionService {
-    void deposit(UUID customerId, String assetName, String orderSide, BigDecimal size, BigDecimal price);
+    void deposit(UUID customerId, BigDecimal amount);
 
-    void withdraw(UUID orderId, UUID customerId);
+    void withdraw(UUID customer, BigDecimal amount, String iban);
 
     UUID publishDepositEvent(DepositRequest depositRequest);
 

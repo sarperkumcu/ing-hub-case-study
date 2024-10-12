@@ -20,13 +20,9 @@ import java.util.Optional;
 @Service
 public class OrderEventListener {
     private final ObjectMapper objectMapper;
-    private final OrderRepository orderRepository;
-    private final AssetRepository assetRepository;
     private final OrderService orderService;
-    public OrderEventListener(ObjectMapper objectMapper, OrderRepository orderRepository, AssetRepository assetRepository, OrderService orderService) {
+    public OrderEventListener(ObjectMapper objectMapper, OrderService orderService) {
         this.objectMapper = objectMapper;
-        this.orderRepository = orderRepository;
-        this.assetRepository = assetRepository;
         this.orderService = orderService;
     }
 

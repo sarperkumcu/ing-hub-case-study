@@ -19,13 +19,13 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PostMapping("/create")
+    @PostMapping("")
     public ResponseEntity<String> createOrder(@RequestBody CreateOrderRequest request) {
         UUID orderId = orderService.publishCreateOrderEvent(request);
         return ResponseEntity.ok("Event created with ID: " + orderId);
     }
 
-    @DeleteMapping("/cancel")
+    @DeleteMapping("")
     public ResponseEntity<String> cancelOrder(@RequestBody CancelOrderRequest request) {
         UUID orderId = orderService.publishCancelOrderEvent(request);
         return ResponseEntity.ok("Event created with ID: " + orderId);

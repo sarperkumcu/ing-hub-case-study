@@ -31,7 +31,7 @@ public class OrderServiceTest {
     private AssetRepository assetRepository;
 
     @InjectMocks
-    private OrderServiceImpl orderService;  // Inject the implementation class, not the interface.
+    private OrderServiceImpl orderService;
 
 
     private UUID orderId;
