@@ -1,4 +1,4 @@
-package com.brokerage;
+package com.brokerage.specification;
 
 import com.brokerage.models.entity.Order;
 import org.springframework.data.jpa.domain.Specification;

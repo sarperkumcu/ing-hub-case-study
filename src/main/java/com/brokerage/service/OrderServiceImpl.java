@@ -1,6 +1,6 @@
 package com.brokerage.service;
 
-import com.brokerage.OrderSpecification;
+import com.brokerage.specification.OrderSpecification;
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;

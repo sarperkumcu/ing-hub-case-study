@@ -1,6 +1,4 @@
 package com.brokerage.models.request;
-
-
 import lombok.Data;
 
 import java.math.BigDecimal;

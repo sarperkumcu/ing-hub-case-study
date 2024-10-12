@@ -1,20 +1,15 @@
 package com.brokerage.listener;
 
 import com.brokerage.event.*;
-import com.brokerage.exception.InsufficientBalanceException;
-import com.brokerage.models.entity.Order;
-import com.brokerage.service.OrderService;
 import com.brokerage.service.TransactionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Transaction;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 @Slf4j
 @Service
 public class TransactionEventListener {
