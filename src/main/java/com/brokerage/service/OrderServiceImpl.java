@@ -1,5 +1,6 @@
 package com.brokerage.service;
 
+import com.brokerage.OrderSpecification;
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;
@@ -10,10 +11,14 @@ import com.brokerage.models.request.CreateOrderRequest;
 import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -38,6 +43,26 @@ public class OrderServiceImpl implements OrderService {
         return eventProducer.publishCancelOrderEvent(cancelOrderRequest);
     }
 
+    @Override
+    public Page<Order> getOrders(UUID customerId, LocalDateTime startDate, LocalDateTime endDate, String assetName, String orderSide, String status, Pageable pageable) {
+        Specification<Order> spec = Specification.where(OrderSpecification.customerIdEquals(customerId));
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and(OrderSpecification.createDateBetween(startDate, endDate));
+        }
+        if (assetName != null && !assetName.isEmpty()) {
+            spec = spec.and(OrderSpecification.assetNameEquals(assetName));
+        }
+        if (orderSide != null && !orderSide.isEmpty()) {
+            spec = spec.and(OrderSpecification.orderSideEquals(orderSide));
+        }
+        if (status != null && !status.isEmpty()) {
+            spec = spec.and(OrderSpecification.statusEquals(status));
+        }
+
+        return orderRepository.findAll(spec, pageable);
+    }
+
     @Transactional
     @Override
     public Order createOrder(UUID customerId, String assetName, String orderSide, BigDecimal size, BigDecimal price) {
@@ -60,8 +85,6 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus("PENDING");
         return orderRepository.save(order);
     }
-
-
 
     private void checkAndDeductBalanceForBuy(UUID customerId, BigDecimal size, BigDecimal price) {
         BigDecimal totalAmount = size.multiply(price);
