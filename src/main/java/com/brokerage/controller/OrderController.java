@@ -10,6 +10,7 @@ import com.brokerage.models.request.admin.AdminCancelOrderRequest;
 import com.brokerage.models.request.admin.AdminCreateOrderRequest;
 import com.brokerage.models.response.GetOrdersResponse;
 import com.brokerage.service.interfaces.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,7 +35,7 @@ public class OrderController {
 
 
     @PostMapping("")
-    public ResponseEntity<String> createOrder(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<String> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
         CreateOrderDTO createOrderDTO = new CreateOrderDTO(user.getId(), request.getAssetName(), request.getOrderSide(), request.getSize(), request.getPrice());
         UUID orderId = orderService.publishCreateOrderEvent(createOrderDTO);
@@ -44,7 +45,7 @@ public class OrderController {
 
 
     @DeleteMapping("")
-    public ResponseEntity<String> cancelOrder(@RequestBody CancelOrderRequest request) {
+    public ResponseEntity<String> cancelOrder(@Valid @RequestBody CancelOrderRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
         CancelOrderDTO cancelOrderDTO = new CancelOrderDTO(user.getId(), request.getOrderId());
         UUID orderId = orderService.publishCancelOrderEvent(cancelOrderDTO);

@@ -47,11 +47,10 @@ public class SecurityConfig {
         // @todo remove h2 console for prod
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers(antMatcher("/swagger-ui/**"),
-                                    antMatcher("/swagger-ui.html"),
+                    authorize.requestMatchers(
                                     antMatcher("/api/auth/register/**"),
                                     antMatcher("/api/auth/login/**"),
-                                    antMatcher("/v3/**"),
+                                    antMatcher("/error"),
                                     antMatcher("/h2-console/**")).permitAll()
                             .anyRequest().authenticated();
                 })

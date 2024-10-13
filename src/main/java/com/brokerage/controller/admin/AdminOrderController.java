@@ -8,6 +8,7 @@ import com.brokerage.models.request.admin.AdminCancelOrderRequest;
 import com.brokerage.models.request.admin.AdminCreateOrderRequest;
 import com.brokerage.models.response.GetOrdersResponse;
 import com.brokerage.service.interfaces.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -39,7 +40,7 @@ public class AdminOrderController {
 
     @PostMapping("")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> createOrderAdmin(@RequestBody AdminCreateOrderRequest request) {
+    public ResponseEntity<String> createOrderAdmin(@Valid @RequestBody AdminCreateOrderRequest request) {
         CreateOrderDTO createOrderDTO = new CreateOrderDTO(request.getUserId(), request.getAssetName(), request.getOrderSide(), request.getSize(), request.getPrice());
         UUID orderId = orderService.publishCreateOrderEvent(createOrderDTO);
         return ResponseEntity.ok("Event created with ID: " + orderId);
@@ -47,7 +48,7 @@ public class AdminOrderController {
 
     @DeleteMapping("")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> cancelOrderAdmin(@RequestBody AdminCancelOrderRequest request) {
+    public ResponseEntity<String> cancelOrderAdmin(@Valid @RequestBody AdminCancelOrderRequest request) {
         CancelOrderDTO cancelOrderDTO = new CancelOrderDTO(request.getUserId(), request.getOrderId());
         UUID orderId = orderService.publishCancelOrderEvent(cancelOrderDTO);
         return ResponseEntity.ok("Event created with ID: " + orderId);

@@ -7,6 +7,7 @@ import com.brokerage.models.request.RegisterRequest;
 import com.brokerage.models.response.LoginResponse;
 import com.brokerage.service.interfaces.AuthService;
 import com.brokerage.service.UserDetailsServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,12 +30,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> signup(@RequestBody RegisterRequest signupRequest) {
+    public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest signupRequest) {
         authService.register(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     @PostMapping(value = "/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         User user = userDetailsService.getUserByEmail(request.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
