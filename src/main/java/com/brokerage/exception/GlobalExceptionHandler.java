@@ -9,4 +9,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInsufficientBalance(InsufficientBalanceException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFound(InsufficientBalanceException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
 }
