@@ -107,7 +107,7 @@ public class OrderServiceTest {
 
     @Test
     void cancelOrder_OrderNotPending() {
-        pendingOrder.setStatus(OrderStatus.MATCHING);
+        pendingOrder.setStatus(OrderStatus.MATCHED);
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
         assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(orderId, customerId));

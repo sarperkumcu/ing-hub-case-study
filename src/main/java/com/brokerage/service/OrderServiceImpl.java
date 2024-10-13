@@ -193,7 +193,7 @@ public class OrderServiceImpl implements OrderService {
             matchSellOrder(order);
         }
 
-        order.setStatus(OrderStatus.MATCHING);
+        order.setStatus(OrderStatus.MATCHED);
         return orderRepository.save(order);
     }
 
