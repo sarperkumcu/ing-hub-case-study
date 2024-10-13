@@ -31,7 +31,7 @@ public class TransactionEventListener {
         try {
             log.info("OrderEventListener | HandleDeposit listener started: {}", event);
             DepositEvent depositEvent = objectMapper.readValue(event, DepositEvent.class);
-            transactionService.deposit(depositEvent.customerId(), depositEvent.amount());
+            transactionService.deposit(depositEvent.userId(), depositEvent.amount());
             log.info("OrderEventListener | HandleDeposit listener finished: {}", event);
         } catch (JsonProcessingException e) {
             log.info("OrderEventListener | HandleDeposit listener failed: {}", event);
@@ -51,7 +51,7 @@ public class TransactionEventListener {
         try {
             log.info("OrderEventListener | HandleWithdraw listener started: {}", event);
             WithdrawEvent withdrawEvent = objectMapper.readValue(event, WithdrawEvent.class);
-            transactionService.withdraw(withdrawEvent.customerId(), withdrawEvent.amount(), withdrawEvent.iban());
+            transactionService.withdraw(withdrawEvent.userId(), withdrawEvent.amount(), withdrawEvent.iban());
             log.info("OrderEventListener | HandleWithdraw listener finished: {}", event);
         } catch (JsonProcessingException e) {
             log.info("OrderEventListener | HandleWithdraw listener failed: {}", event);

@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public class OrderSpecification {
 
-    public static Specification<Order> customerIdEquals(UUID customerId) {
-        return (root, query, builder) -> builder.equal(root.get("customerId"), customerId);
+    public static Specification<Order> userIdEquals(UUID userId) {
+        return (root, query, builder) -> builder.equal(root.get("user").get("id"), userId);
     }
 
     public static Specification<Order> createDateBetween(LocalDateTime startDate, LocalDateTime endDate) {

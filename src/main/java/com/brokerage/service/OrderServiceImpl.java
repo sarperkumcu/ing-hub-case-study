@@ -1,5 +1,8 @@
 package com.brokerage.service;
 
+import com.brokerage.models.dto.CancelOrderDTO;
+import com.brokerage.models.dto.CreateOrderDTO;
+import com.brokerage.models.entity.User;
 import com.brokerage.specification.OrderSpecification;
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
@@ -14,6 +17,8 @@ import com.brokerage.repository.OrderRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,25 +32,30 @@ public class OrderServiceImpl implements OrderService {
     private final AssetRepository assetRepository;
     private final OrderEventPublisher eventProducer;
 
+    private final UserDetailsServiceImpl userDetailsService;
 
-    public OrderServiceImpl(OrderRepository orderRepository, AssetRepository assetRepository, OrderEventPublisher eventProducer) {
+
+    public OrderServiceImpl(OrderRepository orderRepository, AssetRepository assetRepository, OrderEventPublisher eventProducer, UserDetailsServiceImpl userDetailsService) {
         this.orderRepository = orderRepository;
         this.assetRepository = assetRepository;
         this.eventProducer = eventProducer;
+        this.userDetailsService = userDetailsService;
     }
 
 
-    public UUID publishCreateOrderEvent(CreateOrderRequest createOrderRequest) {
-        return eventProducer.publishCreateOrderEvent(createOrderRequest);
+    public UUID publishCreateOrderEvent(CreateOrderDTO createOrderDTO) {
+        return eventProducer.publishCreateOrderEvent(createOrderDTO);
     }
 
-    public UUID publishCancelOrderEvent(CancelOrderRequest cancelOrderRequest) {
-        return eventProducer.publishCancelOrderEvent(cancelOrderRequest);
+    public UUID publishCancelOrderEvent(CancelOrderDTO cancelOrderDTO) {
+        return eventProducer.publishCancelOrderEvent(cancelOrderDTO);
     }
 
     @Override
     public Page<Order> getOrders(UUID customerId, LocalDateTime startDate, LocalDateTime endDate, String assetName, String orderSide, String status, Pageable pageable) {
-        Specification<Order> spec = Specification.where(OrderSpecification.customerIdEquals(customerId));
+        User user = (User)SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+        Specification<Order> spec = Specification.where(OrderSpecification.userIdEquals(user.getId()));
 
         if (startDate != null && endDate != null) {
             spec = spec.and(OrderSpecification.createDateBetween(startDate, endDate));
@@ -65,19 +75,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order createOrder(UUID customerId, String assetName, String orderSide, BigDecimal size, BigDecimal price) {
+    public Order createOrder(UUID userId, String assetName, String orderSide, BigDecimal size, BigDecimal price) {
 
         // @todo handle if assetName equals TRY
         if ("BUY".equalsIgnoreCase(orderSide)) {
-            checkAndDeductBalanceForBuy(customerId, size, price);
+            checkAndDeductBalanceForBuy(userId, size, price);
         } else if ("SELL".equalsIgnoreCase(orderSide)) {
-            checkAndDeductBalanceForSell(customerId, assetName, size);
+            checkAndDeductBalanceForSell(userId, assetName, size);
         } else {
             throw new IllegalArgumentException("Invalid order side: " + orderSide);
         }
 
+        User user = userDetailsService.getUserById(userId);
+
         Order order = new Order();
-        //order.setUser(customerId);
+        order.setUser(user);
         order.setAssetName(assetName);
         order.setOrderSide(orderSide);
         order.setSize(size);

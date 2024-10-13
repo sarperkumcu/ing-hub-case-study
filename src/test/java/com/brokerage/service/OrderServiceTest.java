@@ -4,6 +4,8 @@ import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.Order;
+import com.brokerage.models.entity.User;
+import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +20,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,24 +31,32 @@ public class OrderServiceTest {
     @Mock
     private AssetRepository assetRepository;
 
+    @Mock
+    private OrderEventPublisher eventPublisher;
+
+    @Mock
+    private UserDetailsServiceImpl userDetailsService;
+
     @InjectMocks
     private OrderServiceImpl orderService;
-
 
     private UUID orderId;
     private UUID customerId;
     private Order pendingOrder;
+    private User user;
 
     @BeforeEach
     void setUp() {
         orderId = UUID.randomUUID();
         customerId = UUID.randomUUID();
 
-        // Create a sample pending order for testing.
+        user = new User();
+        user.setId(customerId);
+
         pendingOrder = new Order();
         pendingOrder.setId(orderId);
-        //pendingOrder.setCustomerId(customerId);
-        pendingOrder.setAssetName("AAPL");
+        pendingOrder.setUser(user);
+        pendingOrder.setAssetName("APPL");
         pendingOrder.setOrderSide("BUY");
         pendingOrder.setSize(BigDecimal.valueOf(10));
         pendingOrder.setPrice(BigDecimal.valueOf(100));
@@ -60,7 +69,7 @@ public class OrderServiceTest {
 
         Asset tryAsset = new Asset();
         tryAsset.setUsableSize(BigDecimal.valueOf(2000));
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY"))
                 .thenReturn(Optional.of(tryAsset));
 
         Order result = orderService.cancelOrder(orderId, customerId);
@@ -80,18 +89,21 @@ public class OrderServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> orderService.cancelOrder(orderId, customerId));
     }
 
-   /* @Test
+    @Test
     void cancelOrder_OrderDoesNotBelongToCustomer() {
-        UUID otherCustomerId = UUID.randomUUID();
-        pendingOrder.setCustomerId(otherCustomerId);
+        // Create another user to simulate ownership mismatch
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        pendingOrder.setUser(otherUser);
+
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
         assertThrows(IllegalArgumentException.class, () -> orderService.cancelOrder(orderId, customerId));
-    }*/
+    }
 
     @Test
     void cancelOrder_OrderNotPending() {
-        pendingOrder.setStatus("MATCHED");
+        pendingOrder.setStatus("MATCHED"); // Non-cancellable status
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
         assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(orderId, customerId));
@@ -102,17 +114,17 @@ public class OrderServiceTest {
         pendingOrder.setOrderSide("SELL");
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
-        Asset aaplAsset = new Asset();
-        aaplAsset.setUsableSize(BigDecimal.valueOf(10));
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "AAPL"))
-                .thenReturn(Optional.of(aaplAsset));
+        Asset applAsset = new Asset();
+        applAsset.setUsableSize(BigDecimal.valueOf(10));
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "APPL"))
+                .thenReturn(Optional.of(applAsset));
 
         Order result = orderService.cancelOrder(orderId, customerId);
 
         assertEquals("CANCELED", result.getStatus());
 
-        verify(assetRepository).save(aaplAsset);
-        assertEquals(BigDecimal.valueOf(20), aaplAsset.getUsableSize());
+        verify(assetRepository).save(applAsset);
+        assertEquals(BigDecimal.valueOf(20), applAsset.getUsableSize());
 
         verify(orderRepository).save(pendingOrder);
     }

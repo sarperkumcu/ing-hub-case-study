@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public class AssetSpecification {
 
-    public static Specification<Asset> customerIdEquals(UUID customerId) {
-        return (root, query, builder) -> builder.equal(root.get("customerId"), customerId);
+    public static Specification<Asset> userIdEquals(UUID userId) {
+        return (root, query, builder) -> builder.equal(root.get("user").get("id"), userId);
     }
 
     public static Specification<Asset> assetNameEquals(String assetName) {

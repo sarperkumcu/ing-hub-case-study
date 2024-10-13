@@ -7,6 +7,5 @@ import java.util.UUID;
 
 @Data
 public class DepositRequest {
-    private UUID customerId;
     private BigDecimal amount;
 }

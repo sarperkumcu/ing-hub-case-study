@@ -1,11 +1,15 @@
 package com.brokerage.publisher;
 
 import com.brokerage.event.*;
+import com.brokerage.models.dto.CancelOrderDTO;
+import com.brokerage.models.dto.CreateOrderDTO;
+import com.brokerage.models.entity.User;
 import com.brokerage.models.request.CancelOrderRequest;
 import com.brokerage.models.request.CreateOrderRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,10 +27,10 @@ public class OrderEventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public UUID publishCreateOrderEvent(CreateOrderRequest createOrderRequest) {
+    public UUID publishCreateOrderEvent(CreateOrderDTO createOrderDTO) {
         UUID eventId = UUID.randomUUID();
-        CreateOrderEvent event = new CreateOrderEvent(eventId, createOrderRequest.getCustomerId(), createOrderRequest.getAssetName(),
-                createOrderRequest.getOrderSide(), createOrderRequest.getSize(), createOrderRequest.getPrice());
+        CreateOrderEvent event = new CreateOrderEvent(eventId, createOrderDTO.userId(), createOrderDTO.assetName(),
+                createOrderDTO.orderSide(), createOrderDTO.size(), createOrderDTO.price());
         String message = null;
         try {
             message = objectMapper.writeValueAsString(event);
@@ -40,9 +44,9 @@ public class OrderEventPublisher {
         return eventId;
     }
 
-    public UUID publishCancelOrderEvent(CancelOrderRequest cancelOrderRequest){
+    public UUID publishCancelOrderEvent(CancelOrderDTO cancelOrderDTO){
         UUID eventId = UUID.randomUUID();
-        CancelOrderEvent event = new CancelOrderEvent(eventId, cancelOrderRequest.getOrderId(), cancelOrderRequest.getCustomerId());
+        CancelOrderEvent event = new CancelOrderEvent(eventId, cancelOrderDTO.orderId(), cancelOrderDTO.userId());
         String message = null;
         try {
             message = objectMapper.writeValueAsString(event);

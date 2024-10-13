@@ -32,8 +32,8 @@ public class OrderEventListener {
     public void handleCreateOrder(String event) {
         // @todo idempotency -> redis
         try {
-            Order order = objectMapper.readValue(event, Order.class);
-            orderService.createOrder(order.getUser().getId(), order.getAssetName(), order.getOrderSide(), order.getSize(), order.getPrice());
+            CreateOrderEvent order = objectMapper.readValue(event, CreateOrderEvent.class);
+            orderService.createOrder(order.userId(), order.assetName(), order.orderSide(), order.size(), order.price());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -51,7 +51,7 @@ public class OrderEventListener {
         try {
             log.info("OrderEventListener | HandleCancelOrder listener started: {}", event);
             CancelOrderEvent order = objectMapper.readValue(event, CancelOrderEvent.class);
-            orderService.cancelOrder(order.orderId(), order.customerId());
+            orderService.cancelOrder(order.orderId(), order.userId());
             log.info("OrderEventListener | HandleCancelOrder listener finished: {}", event);
         } catch (JsonProcessingException e) {
             log.info("OrderEventListener | HandleCancelOrder listener failed: {}", event);

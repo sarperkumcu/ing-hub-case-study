@@ -1,6 +1,9 @@
 package com.brokerage.service;
 
 
+import com.brokerage.models.dto.DepositDTO;
+import com.brokerage.models.dto.WithdrawDTO;
+import com.brokerage.models.entity.User;
 import com.brokerage.models.request.DepositRequest;
 import com.brokerage.models.request.WithdrawRequest;
 import lombok.With;
@@ -9,11 +12,11 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface TransactionService {
-    void deposit(UUID customerId, BigDecimal amount);
+    void deposit(UUID userId, BigDecimal amount);
 
-    void withdraw(UUID customer, BigDecimal amount, String iban);
+    void withdraw(UUID userId, BigDecimal amount, String iban);
 
-    UUID publishDepositEvent(DepositRequest depositRequest);
+    UUID publishDepositEvent(DepositDTO depositDTO);
 
-    UUID publishWithdrawEvent(WithdrawRequest withdrawRequest);
+    UUID publishWithdrawEvent(WithdrawDTO withdrawDTO);
 }

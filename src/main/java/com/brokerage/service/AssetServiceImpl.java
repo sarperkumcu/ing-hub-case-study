@@ -21,7 +21,7 @@ public class AssetServiceImpl implements AssetService{
     }
     @Override
     public Page<Asset> getAssets(UUID customerId,  String assetName, Pageable pageable) {
-        Specification<Asset> spec = Specification.where(AssetSpecification.customerIdEquals(customerId));
+        Specification<Asset> spec = Specification.where(AssetSpecification.userIdEquals(customerId));
 
         if (assetName != null && !assetName.isEmpty()) {
             spec = spec.and(AssetSpecification.assetNameEquals(assetName));

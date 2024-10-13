@@ -2,9 +2,10 @@ package com.brokerage.service;
 
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
+import com.brokerage.models.dto.DepositDTO;
+import com.brokerage.models.dto.WithdrawDTO;
 import com.brokerage.models.entity.Asset;
-import com.brokerage.models.request.DepositRequest;
-import com.brokerage.models.request.WithdrawRequest;
+import com.brokerage.models.entity.User;
 import com.brokerage.publisher.TransactionEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,32 +28,38 @@ public class TransactionServiceTest {
 
     @Mock
     private TransactionEventPublisher eventPublisher;
+
     @Mock
     private AssetRepository assetRepository;
 
+    @Mock
+    private UserDetailsServiceImpl userDetailsService;
     @InjectMocks
     private TransactionServiceImpl transactionService;
 
-    private UUID customerId;
+    private UUID userId;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        customerId = UUID.randomUUID();
+        userId = UUID.randomUUID();
+
+        user = new User();
+        user.setId(userId);
     }
 
     @Test
     void deposit_WithExistingTRYAsset_ShouldUpdateBalance() {
-        // Mock the existing TRY asset for the customer
         Asset tryAsset = new Asset();
-       // tryAsset.setCustomerId(customerId);
+        tryAsset.setUser(user);
         tryAsset.setAssetName("TRY");
         tryAsset.setSize(BigDecimal.valueOf(1000));
         tryAsset.setUsableSize(BigDecimal.valueOf(800));
 
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY"))
                 .thenReturn(Optional.of(tryAsset));
 
-        transactionService.deposit(customerId, BigDecimal.valueOf(200));
+        transactionService.deposit(userId, BigDecimal.valueOf(200));
 
         assertEquals(BigDecimal.valueOf(1200), tryAsset.getSize());
         assertEquals(BigDecimal.valueOf(1000), tryAsset.getUsableSize());
@@ -62,14 +69,14 @@ public class TransactionServiceTest {
 
     @Test
     void deposit_WithNoExistingTRYAsset_ShouldCreateNewAsset() {
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY"))
                 .thenReturn(Optional.empty());
 
-        transactionService.deposit(customerId, BigDecimal.valueOf(500));
+        transactionService.deposit(userId, BigDecimal.valueOf(500));
 
         verify(assetRepository).save(any(Asset.class));
         Asset savedAsset = new Asset();
-        savedAsset.setCustomerId(customerId);
+        savedAsset.setUser(user);
         savedAsset.setAssetName("TRY");
         savedAsset.setSize(BigDecimal.valueOf(500));
         savedAsset.setUsableSize(BigDecimal.valueOf(500));
@@ -80,7 +87,7 @@ public class TransactionServiceTest {
     @Test
     void deposit_WithNegativeAmount_ShouldThrowException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.deposit(customerId, BigDecimal.valueOf(-100));
+            transactionService.deposit(userId, BigDecimal.valueOf(-100));
         });
 
         assertEquals("Deposit amount must be greater than zero.", exception.getMessage());
@@ -91,15 +98,15 @@ public class TransactionServiceTest {
     @Test
     void withdraw_WithSufficientBalance_ShouldUpdateBalance() {
         Asset tryAsset = new Asset();
-        tryAsset.setCustomerId(customerId);
+        tryAsset.setUser(user);
         tryAsset.setAssetName("TRY");
         tryAsset.setSize(BigDecimal.valueOf(1000));
         tryAsset.setUsableSize(BigDecimal.valueOf(800));
 
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY"))
                 .thenReturn(Optional.of(tryAsset));
 
-        transactionService.withdraw(customerId, BigDecimal.valueOf(500), "TR1234567890");
+        transactionService.withdraw(userId, BigDecimal.valueOf(500), "TR1234567890");
 
         assertEquals(BigDecimal.valueOf(500), tryAsset.getSize());
         assertEquals(BigDecimal.valueOf(300), tryAsset.getUsableSize());
@@ -110,16 +117,16 @@ public class TransactionServiceTest {
     @Test
     void withdraw_WithInsufficientBalance_ShouldThrowException() {
         Asset tryAsset = new Asset();
-        tryAsset.setCustomerId(customerId);
+        tryAsset.setUser(user);
         tryAsset.setAssetName("TRY");
         tryAsset.setSize(BigDecimal.valueOf(1000));
         tryAsset.setUsableSize(BigDecimal.valueOf(300));
 
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY"))
                 .thenReturn(Optional.of(tryAsset));
 
         InsufficientBalanceException exception = assertThrows(InsufficientBalanceException.class, () -> {
-            transactionService.withdraw(customerId, BigDecimal.valueOf(500), "TR1234567890");
+            transactionService.withdraw(userId, BigDecimal.valueOf(500), "TR1234567890");
         });
 
         assertEquals("Insufficient balance for withdrawal. Requested: 500, Available: 300", exception.getMessage());
@@ -129,14 +136,14 @@ public class TransactionServiceTest {
 
     @Test
     void withdraw_WithNoTRYAsset_ShouldThrowResourceNotFoundException() {
-        when(assetRepository.findByCustomerIdAndAssetNameForUpdate(customerId, "TRY"))
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY"))
                 .thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-            transactionService.withdraw(customerId, BigDecimal.valueOf(500), "TR1234567890");
+            transactionService.withdraw(userId, BigDecimal.valueOf(500), "TR1234567890");
         });
 
-        assertEquals("TRY asset not found for customer with ID: " + customerId, exception.getMessage());
+        assertEquals("TRY asset not found for customer with ID: " + userId, exception.getMessage());
 
         verify(assetRepository, never()).save(any(Asset.class));
     }
@@ -144,39 +151,39 @@ public class TransactionServiceTest {
     @Test
     void withdraw_WithNegativeAmount_ShouldThrowIllegalArgumentException() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            transactionService.withdraw(customerId, BigDecimal.valueOf(-100), "TR1234567890");
+            transactionService.withdraw(userId, BigDecimal.valueOf(-100), "TR1234567890");
         });
 
         assertEquals("Withdraw amount must be greater than zero.", exception.getMessage());
 
         verify(assetRepository, never()).save(any(Asset.class));
     }
+
     @Test
     void publishDepositEvent_ShouldCallEventPublisher() {
-        DepositRequest depositRequest = new DepositRequest();
+        DepositDTO depositDTO = new DepositDTO(userId, BigDecimal.valueOf(500));
         UUID expectedUuid = UUID.randomUUID();
 
-        when(eventPublisher.publishDepositEvent(depositRequest)).thenReturn(expectedUuid);
+        when(eventPublisher.publishDepositEvent(depositDTO)).thenReturn(expectedUuid);
 
-        UUID result = transactionService.publishDepositEvent(depositRequest);
+        UUID result = transactionService.publishDepositEvent(depositDTO);
 
-        verify(eventPublisher).publishDepositEvent(depositRequest);
+        verify(eventPublisher).publishDepositEvent(depositDTO);
 
         assertEquals(expectedUuid, result);
     }
 
     @Test
     void publishWithdrawEvent_ShouldCallEventPublisher() {
-        WithdrawRequest withdrawRequest = new WithdrawRequest();
+        WithdrawDTO withdrawDTO = new WithdrawDTO(userId, BigDecimal.valueOf(500), "TR1234567890");
         UUID expectedUuid = UUID.randomUUID();
 
-        when(eventPublisher.publishWithdrawEvent(withdrawRequest)).thenReturn(expectedUuid);
+        when(eventPublisher.publishWithdrawEvent(withdrawDTO)).thenReturn(expectedUuid);
 
-        UUID result = transactionService.publishWithdrawEvent(withdrawRequest);
+        UUID result = transactionService.publishWithdrawEvent(withdrawDTO);
 
-        verify(eventPublisher).publishWithdrawEvent(withdrawRequest);
+        verify(eventPublisher).publishWithdrawEvent(withdrawDTO);
 
         assertEquals(expectedUuid, result);
     }
 }
-

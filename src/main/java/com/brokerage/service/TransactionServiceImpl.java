@@ -2,7 +2,10 @@ package com.brokerage.service;
 
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
+import com.brokerage.models.dto.DepositDTO;
+import com.brokerage.models.dto.WithdrawDTO;
 import com.brokerage.models.entity.Asset;
+import com.brokerage.models.entity.User;
 import com.brokerage.models.request.CancelOrderRequest;
 import com.brokerage.models.request.CreateOrderRequest;
 import com.brokerage.models.request.DepositRequest;
@@ -13,6 +16,8 @@ import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.With;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,38 +28,40 @@ import java.util.UUID;
 @Service
 public class TransactionServiceImpl implements TransactionService{
     private final TransactionEventPublisher eventPublisher;
+    private final UserDetailsServiceImpl userDetailsService;
     private final AssetRepository assetRepository;
 
 
-    public TransactionServiceImpl(TransactionEventPublisher eventPublisher, AssetRepository assetRepository) {
+    public TransactionServiceImpl(TransactionEventPublisher eventPublisher, UserDetailsServiceImpl userDetailsService, AssetRepository assetRepository) {
         this.eventPublisher = eventPublisher;
+        this.userDetailsService = userDetailsService;
         this.assetRepository = assetRepository;
     }
-    public UUID publishDepositEvent(DepositRequest depositRequest) {
-        return eventPublisher.publishDepositEvent(depositRequest);
+    public UUID publishDepositEvent(DepositDTO depositDTO) {
+        return eventPublisher.publishDepositEvent(depositDTO);
     }
 
-    public UUID publishWithdrawEvent(WithdrawRequest withdrawRequest) {
-        return eventPublisher.publishWithdrawEvent(withdrawRequest);
+    public UUID publishWithdrawEvent(WithdrawDTO withdrawDTO) {
+        return eventPublisher.publishWithdrawEvent(withdrawDTO);
     }
     @Override
     @Transactional
-    public void deposit(UUID customerId, BigDecimal amount) {
+    public void deposit(UUID userId, BigDecimal amount) {
+
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Deposit amount must be greater than zero.");
         }
 
-        Optional<Asset> tryAssetOptional = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY");
-
+        Optional<Asset> tryAssetOptional = assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY");
         Asset tryAsset;
-
+        User user = userDetailsService.getUserById(userId);
         if (tryAssetOptional.isPresent()) {
             tryAsset = tryAssetOptional.get();
             tryAsset.setSize(tryAsset.getSize().add(amount));
             tryAsset.setUsableSize(tryAsset.getUsableSize().add(amount));
         } else {
             tryAsset = new Asset();
-           // tryAsset.getId(customerId);
+            tryAsset.setUser(user);
             tryAsset.setAssetName("TRY");
             tryAsset.setSize(amount);
             tryAsset.setUsableSize(amount);
@@ -65,13 +72,13 @@ public class TransactionServiceImpl implements TransactionService{
 
     @Override
     @Transactional
-    public void withdraw(UUID customerId, BigDecimal amount, String iban) {
+    public void withdraw(UUID userId, BigDecimal amount, String iban) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Withdraw amount must be greater than zero.");
         }
 
-        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY")
-                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + customerId));
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY")
+                .orElseThrow(() -> new ResourceNotFoundException("TRY asset not found for customer with ID: " + userId));
 
         if (tryAsset.getUsableSize().compareTo(amount) < 0) {
             throw new InsufficientBalanceException("Insufficient balance for withdrawal. Requested: " + amount + ", Available: " + tryAsset.getUsableSize());
@@ -82,7 +89,7 @@ public class TransactionServiceImpl implements TransactionService{
 
         assetRepository.save(tryAsset);
 
-        System.out.println("Withdrew " + amount + " TRY from customer " + customerId + " to IBAN " + iban);
+        System.out.println("Withdrew " + amount + " TRY from customer " + userId + " to IBAN " + iban);
     }
 
 }
