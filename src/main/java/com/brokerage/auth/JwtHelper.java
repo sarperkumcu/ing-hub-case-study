@@ -1,4 +1,4 @@
-package com.brokerage;
+package com.brokerage.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

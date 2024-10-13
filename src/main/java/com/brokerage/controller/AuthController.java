@@ -1,6 +1,6 @@
 package com.brokerage.controller;
 
-import com.brokerage.JwtHelper;
+import com.brokerage.auth.JwtHelper;
 import com.brokerage.models.entity.User;
 import com.brokerage.models.request.LoginRequest;
 import com.brokerage.models.request.RegisterRequest;

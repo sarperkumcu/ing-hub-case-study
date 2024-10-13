@@ -1,5 +1,6 @@
-package com.brokerage;
+package com.brokerage.config;
 
+import com.brokerage.auth.JwtAuthFilter;
 import com.brokerage.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
