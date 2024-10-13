@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -130,4 +132,71 @@ public class OrderServiceTest {
 
         verify(orderRepository).save(pendingOrder);
     }
+
+    @Test
+    void createOrder_SuccessfulBuyOrder() {
+        Asset tryAsset = new Asset();
+        tryAsset.setUsableSize(BigDecimal.valueOf(1000));
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY"))
+                .thenReturn(Optional.of(tryAsset));
+
+        when(userDetailsService.getUserById(customerId)).thenReturn(user);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Order order = orderService.createOrder(customerId, "AAPL", "BUY", BigDecimal.valueOf(10), BigDecimal.valueOf(100));
+
+        assertNotNull(order);
+        assertEquals(OrderSide.BUY, order.getOrderSide());
+        assertEquals(OrderStatus.PENDING, order.getStatus());
+
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void createOrder_InsufficientBalanceForBuy() {
+        Asset tryAsset = new Asset();
+        tryAsset.setUsableSize(BigDecimal.valueOf(500));  // Not enough balance
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "TRY"))
+                .thenReturn(Optional.of(tryAsset));
+
+        assertThrows(InsufficientBalanceException.class, () -> {
+            orderService.createOrder(customerId, "AAPL", "BUY", BigDecimal.valueOf(10), BigDecimal.valueOf(100));
+        });
+
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void createOrder_SuccessfulSellOrder() {
+        Asset asset = new Asset();
+        asset.setUsableSize(BigDecimal.valueOf(10));
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "AAPL"))
+                .thenReturn(Optional.of(asset));
+
+        when(userDetailsService.getUserById(customerId)).thenReturn(user);
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Order order = orderService.createOrder(customerId, "AAPL", "SELL", BigDecimal.valueOf(10), BigDecimal.valueOf(100));
+
+        assertNotNull(order);
+        assertEquals(OrderSide.SELL, order.getOrderSide());
+        assertEquals(OrderStatus.PENDING, order.getStatus());
+
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void createOrder_InsufficientBalanceForSell() {
+        Asset asset = new Asset();
+        asset.setUsableSize(BigDecimal.valueOf(5));  // Not enough stock to sell
+        when(assetRepository.findByUserIdAndAssetNameForUpdate(customerId, "AAPL"))
+                .thenReturn(Optional.of(asset));
+
+        assertThrows(InsufficientBalanceException.class, () -> {
+            orderService.createOrder(customerId, "AAPL", "SELL", BigDecimal.valueOf(10), BigDecimal.valueOf(100));
+        });
+
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
 }
