@@ -20,13 +20,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsServiceImpl userDetailsService;
+    private final JwtHelper jwtHelper;
 
 
-    public AuthServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationManager authenticationManager, UserDetailsServiceImpl userDetailsService) {
+    public AuthServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationManager authenticationManager, UserDetailsServiceImpl userDetailsService, JwtHelper jwtHelper) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
+        this.jwtHelper = jwtHelper;
     }
 
     @Override
@@ -37,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(hashedPassword);
         userRepository.save(user);
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        return JwtHelper.generateToken(user.getId().toString(), user.getEmail());
+        return jwtHelper.generateToken(user.getId().toString(), user.getEmail());
 
     }
 
@@ -45,6 +47,6 @@ public class AuthServiceImpl implements AuthService {
     public String login(LoginRequest loginRequest) {
         User user = userDetailsService.getUserByEmail(loginRequest.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        return JwtHelper.generateToken(user.getId().toString(), user.getEmail());
+        return jwtHelper.generateToken(user.getId().toString(), user.getEmail());
     }
 }
