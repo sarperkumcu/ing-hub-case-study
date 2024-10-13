@@ -79,10 +79,10 @@ public class OrderController {
                 .map(order -> new GetOrdersResponse(
                         order.getId(),
                         order.getAssetName(),
-                        order.getOrderSide(),
+                        order.getOrderSide().name(),
                         order.getSize(),
                         order.getPrice(),
-                        order.getStatus(),
+                        order.getStatus().name(),
                         order.getCreateDate()
                 ))
                 .toList();
@@ -104,10 +104,10 @@ public class OrderController {
                 .map(order -> new GetOrdersResponse(
                         order.getId(),
                         order.getAssetName(),
-                        order.getOrderSide(),
+                        order.getOrderSide().name(),
                         order.getSize(),
                         order.getPrice(),
-                        order.getStatus(),
+                        order.getStatus().name(),
                         order.getCreateDate()
                 ))
                 .toList();

@@ -2,6 +2,7 @@ package com.brokerage.service;
 
 import com.brokerage.models.entity.User;
 import com.brokerage.repository.UserRepository;
+import com.brokerage.service.interfaces.UserService;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService, UserService {
 
     private final UserRepository userRepository;
 
@@ -40,6 +41,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
+    @Override
     public User getUserById(UUID id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));

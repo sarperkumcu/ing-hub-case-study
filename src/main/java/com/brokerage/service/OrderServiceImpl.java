@@ -3,6 +3,8 @@ package com.brokerage.service;
 import com.brokerage.models.dto.CancelOrderDTO;
 import com.brokerage.models.dto.CreateOrderDTO;
 import com.brokerage.models.entity.User;
+import com.brokerage.models.enums.OrderSide;
+import com.brokerage.models.enums.OrderStatus;
 import com.brokerage.service.interfaces.OrderService;
 import com.brokerage.specification.OrderSpecification;
 import com.brokerage.exception.InsufficientBalanceException;
@@ -73,12 +75,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order createOrder(UUID userId, String assetName, String orderSide, BigDecimal size, BigDecimal price) {
+    public Order createOrder(UUID userId, String assetName, String orderSideString, BigDecimal size, BigDecimal price) {
 
+        OrderSide orderSide;
+        try {
+            orderSide = OrderSide.valueOf(orderSideString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid order side: " + orderSideString);
+        }
         // @todo handle if assetName equals TRY
-        if ("BUY".equalsIgnoreCase(orderSide)) {
+        // @todo map orderside to enum
+        if (OrderSide.BUY.equals(orderSide)) {
             checkAndDeductBalanceForBuy(userId, size, price);
-        } else if ("SELL".equalsIgnoreCase(orderSide)) {
+        } else if (OrderSide.SELL.equals(orderSide)) {
             checkAndDeductBalanceForSell(userId, assetName, size);
         } else {
             throw new IllegalArgumentException("Invalid order side: " + orderSide);
@@ -92,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderSide(orderSide);
         order.setSize(size);
         order.setPrice(price);
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
         return orderRepository.save(order);
     }
 
@@ -132,17 +141,17 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException("Order does not belong to the specified customer.");
         }
 
-        if (!"PENDING".equalsIgnoreCase(order.getStatus())) {
+        if (!OrderStatus.PENDING.name().equalsIgnoreCase(order.getStatus().name())) {
             throw new IllegalStateException("Only PENDING orders can be canceled.");
         }
 
-        if ("BUY".equalsIgnoreCase(order.getOrderSide())) {
+        if (OrderSide.BUY.equals(order.getOrderSide())) {
             refundTryBalance(order);
-        } else if ("SELL".equalsIgnoreCase(order.getOrderSide())) {
+        } else if (OrderSide.SELL.equals(order.getOrderSide())) {
             refundAssetBalance(order);
         }
 
-        order.setStatus("CANCELED");
+        order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
         return order;
     }

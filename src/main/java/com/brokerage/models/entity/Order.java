@@ -1,5 +1,7 @@
 package com.brokerage.models.entity;
 
+import com.brokerage.models.enums.OrderSide;
+import com.brokerage.models.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,8 +31,9 @@ public class Order {
     @Column(name = "asset_name", nullable = false)
     private String assetName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_side", nullable = false)
-    private String orderSide;
+    private OrderSide orderSide;
 
     @Column(name = "size", nullable = false)
     private BigDecimal size;
@@ -38,8 +41,9 @@ public class Order {
     @Column(name = "price", nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private OrderStatus status;
 
     @Column(name = "create_date", nullable = false)
     private LocalDateTime createDate = LocalDateTime.now();

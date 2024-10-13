@@ -33,7 +33,7 @@ public class JwtHelper {
                 .claims(claims)
                 .subject(email)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 + 24))
+                .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 2))
                 .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
 

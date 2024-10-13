@@ -5,6 +5,8 @@ import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.Order;
 import com.brokerage.models.entity.User;
+import com.brokerage.models.enums.OrderSide;
+import com.brokerage.models.enums.OrderStatus;
 import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
@@ -57,10 +59,10 @@ public class OrderServiceTest {
         pendingOrder.setId(orderId);
         pendingOrder.setUser(user);
         pendingOrder.setAssetName("APPL");
-        pendingOrder.setOrderSide("BUY");
+        pendingOrder.setOrderSide(OrderSide.BUY);
         pendingOrder.setSize(BigDecimal.valueOf(10));
         pendingOrder.setPrice(BigDecimal.valueOf(100));
-        pendingOrder.setStatus("PENDING");
+        pendingOrder.setStatus(OrderStatus.PENDING);
     }
 
     @Test
@@ -74,7 +76,7 @@ public class OrderServiceTest {
 
         Order result = orderService.cancelOrder(orderId, customerId);
 
-        assertEquals("CANCELED", result.getStatus());
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
 
         verify(assetRepository).save(tryAsset);
         assertEquals(BigDecimal.valueOf(3000), tryAsset.getUsableSize());
@@ -103,7 +105,7 @@ public class OrderServiceTest {
 
     @Test
     void cancelOrder_OrderNotPending() {
-        pendingOrder.setStatus("MATCHED"); // Non-cancellable status
+        pendingOrder.setStatus(OrderStatus.MATCHING);
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
         assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(orderId, customerId));
@@ -111,7 +113,7 @@ public class OrderServiceTest {
 
     @Test
     void cancelOrder_SellOrderRefund() {
-        pendingOrder.setOrderSide("SELL");
+        pendingOrder.setOrderSide(OrderSide.SELL);
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(pendingOrder));
 
         Asset applAsset = new Asset();
@@ -121,7 +123,7 @@ public class OrderServiceTest {
 
         Order result = orderService.cancelOrder(orderId, customerId);
 
-        assertEquals("CANCELED", result.getStatus());
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
 
         verify(assetRepository).save(applAsset);
         assertEquals(BigDecimal.valueOf(20), applAsset.getUsableSize());
