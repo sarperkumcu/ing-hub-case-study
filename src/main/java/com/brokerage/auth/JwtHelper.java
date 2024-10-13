@@ -17,15 +17,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.crypto.SecretKey;
 
 public class JwtHelper {
-
-    private static final int MINUTES = 60;
-    private static final String SECRET_KEY = "88cd2108b5347d973cf39cdf9053d7dd42704876d8c9a9bd8e2d168259d3ddf7";
+    @Value("${jwt.secret}")
+    private static String SECRET_KEY;
     public static String generateToken(String id, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", id);
