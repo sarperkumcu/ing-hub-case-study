@@ -1,11 +1,9 @@
-package com.brokerage.controller;
+package com.brokerage.controller.admin;
 
 import com.brokerage.models.dto.CancelOrderDTO;
 import com.brokerage.models.dto.CreateOrderDTO;
 import com.brokerage.models.entity.Order;
 import com.brokerage.models.entity.User;
-import com.brokerage.models.request.CancelOrderRequest;
-import com.brokerage.models.request.CreateOrderRequest;
 import com.brokerage.models.request.admin.AdminCancelOrderRequest;
 import com.brokerage.models.request.admin.AdminCreateOrderRequest;
 import com.brokerage.models.response.GetOrdersResponse;
@@ -23,36 +21,42 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/orders")
-public class OrderController {
+@RequestMapping("/api/admin/orders")
+public class AdminOrderController {
 
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
+    public AdminOrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 
+    @PutMapping("/match/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> matchOrder(@PathVariable UUID orderId) {
+        Order matchedOrder = orderService.matchPendingOrder(orderId);
+        return ResponseEntity.ok("Order with ID: " + matchedOrder.getId() + " has been successfully matched.");
+    }
 
     @PostMapping("")
-    public ResponseEntity<String> createOrder(@RequestBody CreateOrderRequest request) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        CreateOrderDTO createOrderDTO = new CreateOrderDTO(user.getId(), request.getAssetName(), request.getOrderSide(), request.getSize(), request.getPrice());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> createOrderAdmin(@RequestBody AdminCreateOrderRequest request) {
+        CreateOrderDTO createOrderDTO = new CreateOrderDTO(request.getUserId(), request.getAssetName(), request.getOrderSide(), request.getSize(), request.getPrice());
         UUID orderId = orderService.publishCreateOrderEvent(createOrderDTO);
         return ResponseEntity.ok("Event created with ID: " + orderId);
     }
 
-
-
     @DeleteMapping("")
-    public ResponseEntity<String> cancelOrder(@RequestBody CancelOrderRequest request) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        CancelOrderDTO cancelOrderDTO = new CancelOrderDTO(user.getId(), request.getOrderId());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> cancelOrderAdmin(@RequestBody AdminCancelOrderRequest request) {
+        CancelOrderDTO cancelOrderDTO = new CancelOrderDTO(request.getUserId(), request.getOrderId());
         UUID orderId = orderService.publishCancelOrderEvent(cancelOrderDTO);
         return ResponseEntity.ok("Event created with ID: " + orderId);
     }
 
     @GetMapping("")
-    public ResponseEntity<List<GetOrdersResponse>> listOrders(
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<GetOrdersResponse>> listOrdersAdmin(
+            @RequestParam UUID customerId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(required = false) String assetName,
@@ -61,8 +65,7 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        List<Order> orders = orderService.getOrders(user.getId(), startDate, endDate, assetName, orderSide, status, pageable).getContent();
+        List<Order> orders = orderService.getOrders(customerId, startDate, endDate, assetName, orderSide, status, pageable).getContent();
         List<GetOrdersResponse> orderResponses = orders.stream()
                 .map(order -> new GetOrdersResponse(
                         order.getId(),

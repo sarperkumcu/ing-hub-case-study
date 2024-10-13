@@ -176,4 +176,70 @@ public class OrderServiceImpl implements OrderService {
 
         System.out.println("Refunded " + order.getSize() + " of " + order.getAssetName() + " to customer " + order.getUser().getId());
     }
+
+    @Transactional
+    @Override
+    public Order matchPendingOrder(UUID orderId) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
+
+        if (!OrderStatus.PENDING.equals(order.getStatus())) {
+            throw new IllegalStateException("Only PENDING orders can be matched.");
+        }
+
+        if (OrderSide.BUY.equals(order.getOrderSide())) {
+            matchBuyOrder(order);
+        } else if (OrderSide.SELL.equals(order.getOrderSide())) {
+            matchSellOrder(order);
+        }
+
+        order.setStatus(OrderStatus.MATCHING);
+        return orderRepository.save(order);
+    }
+
+    private void matchBuyOrder(Order order) {
+        UUID userId = order.getUser().getId();
+        User user = userDetailsService.getUserById(userId);
+        BigDecimal totalSize = order.getSize();
+
+        Asset boughtAsset = assetRepository.findByUserIdAndAssetNameForUpdate(userId, order.getAssetName())
+                .orElseGet(() -> createNewAsset(user, order.getAssetName()));
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY")
+                .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for user ID: " + userId));
+
+        boughtAsset.setSize(boughtAsset.getSize().add(totalSize));
+        boughtAsset.setUsableSize(boughtAsset.getSize().add(totalSize));
+
+        tryAsset.setSize(tryAsset.getSize().subtract(totalSize.multiply(order.getPrice())));
+        assetRepository.save(boughtAsset);
+        assetRepository.save(tryAsset);
+    }
+
+    private void matchSellOrder(Order order) {
+        UUID userId = order.getUser().getId();
+        User user = userDetailsService.getUserById(userId);
+        BigDecimal totalPrice = order.getSize().multiply(order.getPrice());
+
+        Asset soldAsset = assetRepository.findByUserIdAndAssetNameForUpdate(userId, order.getAssetName())
+                .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for user ID: " + userId));
+
+        soldAsset.setSize(soldAsset.getSize().subtract(order.getSize()));
+        assetRepository.save(soldAsset);
+
+        Asset tryAsset = assetRepository.findByUserIdAndAssetNameForUpdate(userId, "TRY")
+                .orElseGet(() -> createNewAsset(user, "TRY"));
+
+        tryAsset.setSize(tryAsset.getSize().add(totalPrice));
+        tryAsset.setUsableSize(tryAsset.getSize().add(totalPrice));
+        assetRepository.save(tryAsset);
+    }
+
+    private Asset createNewAsset(User user, String assetName) {
+        Asset newAsset = new Asset();
+        newAsset.setUser(user);
+        newAsset.setAssetName(assetName);
+        newAsset.setSize(BigDecimal.ZERO);
+        newAsset.setUsableSize(BigDecimal.ZERO);
+        return newAsset;
+    }
 }

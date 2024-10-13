@@ -23,12 +23,6 @@ public class TransactionController {
     public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
     }
-    @PostMapping("/deposit/admin")
-    public ResponseEntity<String> depositMoneyAdmin(@RequestBody AdminDepositRequest depositRequest) {
-        DepositDTO depositDTO = new DepositDTO(depositRequest.getUserId(), depositRequest.getAmount());
-        transactionService.publishDepositEvent(depositDTO);
-        return ResponseEntity.accepted().body("Deposit request received.");
-    }
 
     @PostMapping("/deposit")
     public ResponseEntity<String> depositMoney(@RequestBody DepositRequest depositRequest) {
@@ -38,12 +32,7 @@ public class TransactionController {
         return ResponseEntity.accepted().body("Deposit request received.");
     }
 
-    @PostMapping("/withdraw/admin")
-    public ResponseEntity<String> withdrawMoneyAdmin(@RequestBody AdminWithdrawRequest withdrawRequest) {
-        WithdrawDTO withdrawDTO = new WithdrawDTO(withdrawRequest.getUserId(), withdrawRequest.getAmount(), withdrawRequest.getIban());
-        transactionService.publishWithdrawEvent(withdrawDTO);
-        return ResponseEntity.accepted().body("Withdrawal request received.");
-    }
+
     @PostMapping("/withdraw")
     public ResponseEntity<String> withdrawMoney(@RequestBody WithdrawRequest withdrawRequest) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
