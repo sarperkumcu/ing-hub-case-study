@@ -17,7 +17,9 @@ import java.util.UUID;
 public interface OrderService {
     UUID publishCreateOrderEvent(CreateOrderDTO createOrderDTO);
     UUID publishCancelOrderEvent(CancelOrderDTO cancelOrderDTO);
-    Order matchPendingOrder(UUID orderId);
+    UUID publishMatchOrderEvent(UUID orderId);
+
+    Order matchOrder(UUID orderId);
     Order createOrder(UUID userId, String assetName, String orderSide, BigDecimal size, BigDecimal price);
     Order cancelOrder(UUID orderId, UUID customerId);
     Page<Order> getOrders(UUID customerId, LocalDateTime startDate, LocalDateTime endDate, String assetName, String orderSide, String status, Pageable pageable);

@@ -5,6 +5,7 @@ import com.brokerage.models.entity.User;
 import com.brokerage.models.request.LoginRequest;
 import com.brokerage.models.request.RegisterRequest;
 import com.brokerage.models.response.LoginResponse;
+import com.brokerage.models.response.RegisterResponse;
 import com.brokerage.service.interfaces.AuthService;
 import com.brokerage.service.UserDetailsServiceImpl;
 import jakarta.validation.Valid;
@@ -20,27 +21,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
     private AuthService authService;
-    private AuthenticationManager authenticationManager;
-    private UserDetailsServiceImpl userDetailsService;
 
-    public AuthController(AuthService authService, AuthenticationManager authenticationManager, UserDetailsServiceImpl userDetailsService){
+    public AuthController(AuthService authService){
         this.authService = authService;
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest signupRequest) {
-        authService.register(signupRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<RegisterResponse> signup(@Valid @RequestBody RegisterRequest signupRequest) {
+        String token = authService.register(signupRequest);
+        return ResponseEntity.ok(new RegisterResponse(token));
     }
     @PostMapping(value = "/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        User user = userDetailsService.getUserByEmail(request.getEmail());
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
 
-        String token = JwtHelper.generateToken(user.getId().toString(), user.getEmail());
-        return ResponseEntity.ok(new LoginResponse(request.getEmail(), token));
+        String token = authService.login(loginRequest);
+        return ResponseEntity.ok(new LoginResponse(token));
     }
 
 }

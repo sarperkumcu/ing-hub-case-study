@@ -3,10 +3,10 @@ package com.brokerage.models.response;
 import lombok.Data;
 
 @Data
-public class LoginResponse {
+public class RegisterResponse {
     private String token;
 
-    public LoginResponse(String token) {
+    public RegisterResponse(String token) {
         this.token = token;
     }
 }

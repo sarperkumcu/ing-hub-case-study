@@ -34,8 +34,8 @@ public class AdminOrderController {
     @PutMapping("/match/{orderId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> matchOrder(@PathVariable UUID orderId) {
-        Order matchedOrder = orderService.matchPendingOrder(orderId);
-        return ResponseEntity.ok("Order with ID: " + matchedOrder.getId() + " has been successfully matched.");
+        UUID matchedOrder = orderService.publishMatchOrderEvent(orderId);
+        return ResponseEntity.ok("Order with ID: " + matchedOrder+ " has been successfully matched.");
     }
 
     @PostMapping("")

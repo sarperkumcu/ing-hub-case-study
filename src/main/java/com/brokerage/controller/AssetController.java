@@ -2,6 +2,8 @@ package com.brokerage.controller;
 
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.User;
+import com.brokerage.models.response.GetAssetsResponse;
+import com.brokerage.models.response.GetOrdersResponse;
 import com.brokerage.service.interfaces.AssetService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -22,31 +25,25 @@ public class AssetController {
     public AssetController(AssetService assetService) {
         this.assetService = assetService;
     }
-    @GetMapping("/admin")
-    public ResponseEntity<Page<Asset>> getAssetsAdmin(
-            @RequestParam UUID customerId,
-            @RequestParam(required = false) String assetName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        Page<Asset> assets = assetService.getAssets(customerId, assetName, pageable);
-
-        return ResponseEntity.ok(assets);
-    }
 
     @GetMapping("")
-    public ResponseEntity<Page<Asset>> getAssets(
+    public ResponseEntity<List<GetAssetsResponse>> getAssets(
             @RequestParam(required = false) String assetName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        Page<Asset> assets = assetService.getAssets(user.getId(), assetName, pageable);
-
-        return ResponseEntity.ok(assets);
+        List<Asset> assets = assetService.getAssets(user.getId(), assetName, pageable).getContent();
+        List<GetAssetsResponse> assetsResponses = assets.stream()
+                .map(asset -> new GetAssetsResponse(
+                        asset.getId(),
+                        asset.getAssetName(),
+                        asset.getSize(),
+                        asset.getUsableSize()
+                ))
+                .toList();
+        return ResponseEntity.ok(assetsResponses);
     }
 
 }

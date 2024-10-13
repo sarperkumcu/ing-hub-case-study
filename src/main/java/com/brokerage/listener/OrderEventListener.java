@@ -40,6 +40,23 @@ public class OrderEventListener {
 
     @RetryableTopic(
             attempts = "3",
+            exclude = {InsufficientBalanceException.class, IllegalArgumentException.class},
+            autoCreateTopics = "false"
+    )
+    @KafkaListener(topics = "match-order-topic", groupId = "brokerage-group")
+    @Transactional
+    public void handleMatchOrder(String event) {
+        try {
+            MatchOrderEvent order = objectMapper.readValue(event, MatchOrderEvent.class);
+            orderService.matchOrder(order.orderId());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @RetryableTopic(
+            attempts = "3",
             exclude = {IllegalArgumentException.class},
             autoCreateTopics = "false"
     )

@@ -43,12 +43,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
+    @Override
     public UUID publishCreateOrderEvent(CreateOrderDTO createOrderDTO) {
         return eventProducer.publishCreateOrderEvent(createOrderDTO);
     }
 
+    @Override
     public UUID publishCancelOrderEvent(CancelOrderDTO cancelOrderDTO) {
         return eventProducer.publishCancelOrderEvent(cancelOrderDTO);
+    }
+
+    @Override
+    public UUID publishMatchOrderEvent(UUID orderId) {
+        return eventProducer.publishMatchOrderEvent(orderId);
     }
 
     @Override
@@ -179,7 +186,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public Order matchPendingOrder(UUID orderId) {
+    public Order matchOrder(UUID orderId) {
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
 
@@ -208,7 +215,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException(order.getAssetName() + " asset not found for user ID: " + userId));
 
         boughtAsset.setSize(boughtAsset.getSize().add(totalSize));
-        boughtAsset.setUsableSize(boughtAsset.getSize().add(totalSize));
+        boughtAsset.setUsableSize(boughtAsset.getUsableSize().add(totalSize));
 
         tryAsset.setSize(tryAsset.getSize().subtract(totalSize.multiply(order.getPrice())));
         assetRepository.save(boughtAsset);
@@ -230,7 +237,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> createNewAsset(user, "TRY"));
 
         tryAsset.setSize(tryAsset.getSize().add(totalPrice));
-        tryAsset.setUsableSize(tryAsset.getSize().add(totalPrice));
+        tryAsset.setUsableSize(tryAsset.getUsableSize().add(totalPrice));
         assetRepository.save(tryAsset);
     }
 

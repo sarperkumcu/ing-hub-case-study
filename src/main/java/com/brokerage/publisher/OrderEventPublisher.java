@@ -55,7 +55,19 @@ public class OrderEventPublisher {
         }
         kafkaTemplate.send("cancel-order-topic", message);
         return eventId;
+    }
 
+    public UUID publishMatchOrderEvent(UUID orderId){
+        UUID eventId = UUID.randomUUID();
+        MatchOrderEvent event = new MatchOrderEvent(eventId, orderId);
+        String message = null;
+        try {
+            message = objectMapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        kafkaTemplate.send("match-order-topic", message);
+        return eventId;
     }
 
 }
