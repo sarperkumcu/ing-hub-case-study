@@ -2,8 +2,7 @@ package com.brokerage.listener;
 
 import com.brokerage.event.*;
 import com.brokerage.exception.InsufficientBalanceException;
-import com.brokerage.models.entity.Order;
-import com.brokerage.service.OrderService;
+import com.brokerage.service.interfaces.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

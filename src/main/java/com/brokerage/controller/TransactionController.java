@@ -8,7 +8,7 @@ import com.brokerage.models.request.WithdrawRequest;
 
 import com.brokerage.models.request.admin.AdminDepositRequest;
 import com.brokerage.models.request.admin.AdminWithdrawRequest;
-import com.brokerage.service.TransactionService;
+import com.brokerage.service.interfaces.TransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;

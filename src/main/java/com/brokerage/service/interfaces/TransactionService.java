@@ -1,4 +1,4 @@
-package com.brokerage.service;
+package com.brokerage.service.interfaces;
 
 
 import com.brokerage.models.dto.DepositDTO;

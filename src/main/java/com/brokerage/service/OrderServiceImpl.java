@@ -3,14 +3,13 @@ package com.brokerage.service;
 import com.brokerage.models.dto.CancelOrderDTO;
 import com.brokerage.models.dto.CreateOrderDTO;
 import com.brokerage.models.entity.User;
+import com.brokerage.service.interfaces.OrderService;
 import com.brokerage.specification.OrderSpecification;
 import com.brokerage.exception.InsufficientBalanceException;
 import com.brokerage.exception.ResourceNotFoundException;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.Order;
 
-import com.brokerage.models.request.CancelOrderRequest;
-import com.brokerage.models.request.CreateOrderRequest;
 import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.repository.AssetRepository;
 import com.brokerage.repository.OrderRepository;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

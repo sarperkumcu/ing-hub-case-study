@@ -6,18 +6,10 @@ import com.brokerage.models.dto.DepositDTO;
 import com.brokerage.models.dto.WithdrawDTO;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.User;
-import com.brokerage.models.request.CancelOrderRequest;
-import com.brokerage.models.request.CreateOrderRequest;
-import com.brokerage.models.request.DepositRequest;
-import com.brokerage.models.request.WithdrawRequest;
-import com.brokerage.publisher.OrderEventPublisher;
 import com.brokerage.publisher.TransactionEventPublisher;
 import com.brokerage.repository.AssetRepository;
-import com.brokerage.repository.OrderRepository;
+import com.brokerage.service.interfaces.TransactionService;
 import jakarta.transaction.Transactional;
-import lombok.With;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,7 +18,7 @@ import java.util.UUID;
 
 
 @Service
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
     private final TransactionEventPublisher eventPublisher;
     private final UserDetailsServiceImpl userDetailsService;
     private final AssetRepository assetRepository;

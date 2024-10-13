@@ -2,7 +2,7 @@ package com.brokerage.controller;
 
 import com.brokerage.models.entity.Asset;
 import com.brokerage.models.entity.User;
-import com.brokerage.service.AssetService;
+import com.brokerage.service.interfaces.AssetService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

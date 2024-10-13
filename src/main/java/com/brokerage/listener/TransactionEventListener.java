@@ -1,7 +1,7 @@
 package com.brokerage.listener;
 
 import com.brokerage.event.*;
-import com.brokerage.service.TransactionService;
+import com.brokerage.service.interfaces.TransactionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

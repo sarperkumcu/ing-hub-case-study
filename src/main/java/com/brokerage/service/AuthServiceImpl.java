@@ -3,12 +3,13 @@ package com.brokerage.service;
 import com.brokerage.models.entity.User;
 import com.brokerage.models.request.RegisterRequest;
 import com.brokerage.repository.UserRepository;
+import com.brokerage.service.interfaces.AuthService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;

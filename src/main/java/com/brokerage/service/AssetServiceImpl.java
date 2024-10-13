@@ -1,6 +1,7 @@
 package com.brokerage.service;
 
 
+import com.brokerage.service.interfaces.AssetService;
 import com.brokerage.specification.AssetSpecification;
 import com.brokerage.models.entity.Asset;
 import com.brokerage.repository.AssetRepository;
@@ -13,7 +14,7 @@ import java.util.UUID;
 
 
 @Service
-public class AssetServiceImpl implements AssetService{
+public class AssetServiceImpl implements AssetService {
     private final AssetRepository assetRepository;
 
     public AssetServiceImpl(AssetRepository assetRepository) {

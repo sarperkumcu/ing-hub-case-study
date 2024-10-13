@@ -9,7 +9,7 @@ import com.brokerage.models.request.CreateOrderRequest;
 import com.brokerage.models.request.admin.AdminCancelOrderRequest;
 import com.brokerage.models.request.admin.AdminCreateOrderRequest;
 import com.brokerage.models.response.GetOrdersResponse;
-import com.brokerage.service.OrderService;
+import com.brokerage.service.interfaces.OrderService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
